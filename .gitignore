@@ -1,0 +1,30 @@
+# Dependencies
+backend/node_modules/
+frontend/node_modules/
+
+# Build output
+frontend/dist/
+
+# Database (local only)
+backend/database/rentease.db
+
+# Uploads (local only - add to cloud storage in production)
+backend/uploads/
+
+# Environment
+backend/.env
+.env
+
+# Editor
+.vscode/settings.json
+.idea/
+*.swp
+*.swo
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Logs
+*.log
+npm-debug.log*
