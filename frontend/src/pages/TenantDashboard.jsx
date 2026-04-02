@@ -62,10 +62,10 @@ export default function TenantDashboard() {
         api.get('/rentals/tenant'),
         api.get('/maintenance/tenant'),
       ]);
-      setTenancy(ten.data);
-      setPayments(pay.data);
-      setRequests(req.data);
-      setMaintenance(maint.data);
+      setTenancy(ten.data || null);
+      setPayments(Array.isArray(pay.data) ? pay.data : []);
+      setRequests(Array.isArray(req.data) ? req.data : []);
+      setMaintenance(Array.isArray(maint.data) ? maint.data : []);
       if (ten.data) setPayForm(p => ({ ...p, amount: ten.data.monthly_rent }));
     } catch (err) { console.error(err); }
     setLoading(false);

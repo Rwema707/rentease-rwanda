@@ -22,9 +22,9 @@ export default function AdminDashboard() {
         api.get('/admin/users'),
         api.get('/admin/payments'),
       ]);
-      setStats(s.data);
-      setUsers(u.data);
-      setPayments(p.data);
+      setStats(s.data || null);
+      setUsers(Array.isArray(u.data) ? u.data : []);
+      setPayments(Array.isArray(p.data) ? p.data : []);
     } catch (err) { console.error(err); }
     setLoading(false);
   }

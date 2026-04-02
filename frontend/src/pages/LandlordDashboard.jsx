@@ -70,10 +70,10 @@ export default function LandlordDashboard() {
         api.get('/payments/history'),
         api.get('/maintenance/landlord'),
       ]);
-      setProperties(props.data);
-      setRequests(reqs.data);
-      setPayments(pays.data);
-      setMaintenance(maint.data);
+      setProperties(Array.isArray(props.data) ? props.data : []);
+      setRequests(Array.isArray(reqs.data) ? reqs.data : []);
+      setPayments(Array.isArray(pays.data) ? pays.data : []);
+      setMaintenance(Array.isArray(maint.data) ? maint.data : []);
     } catch (err) { console.error(err); }
     setLoading(false);
   }
