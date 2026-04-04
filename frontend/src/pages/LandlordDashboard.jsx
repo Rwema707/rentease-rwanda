@@ -63,18 +63,17 @@ export default function LandlordDashboard() {
 
   async function loadAll() {
     setLoading(true);
-    try {
-      const [props, reqs, pays, maint] = await Promise.all([
-        api.get('/properties/landlord/mine'),
-        api.get('/rentals/landlord'),
-        api.get('/payments/history'),
-        api.get('/maintenance/landlord'),
-      ]);
-      setProperties(Array.isArray(props.data) ? props.data : []);
-      setRequests(Array.isArray(reqs.data) ? reqs.data : []);
-      setPayments(Array.isArray(pays.data) ? pays.data : []);
-      setMaintenance(Array.isArray(maint.data) ? maint.data : []);
-    } catch (err) { console.error(err); }
+    const safe = async (fn, fallback) => { try { const r = await fn(); return r?.data ?? fallback; } catch(e) { console.warn('API err:', e?.message); return fallback; } };
+    const [props, reqs, pays, maint] = await Promise.all([
+      safe(() => api.get('/properties/landlord/mine'), []),
+      safe(() => api.get('/rentals/landlord'), []),
+      safe(() => api.get('/payments/history'), []),
+      safe(() => api.get('/maintenance/landlord'), []),
+    ]);
+    setProperties(Array.isArray(props) ? props : []);
+    setRequests(Array.isArray(reqs) ? reqs : []);
+    setPayments(Array.isArray(pays) ? pays : []);
+    setMaintenance(Array.isArray(maint) ? maint : []);
     setLoading(false);
   }
 
@@ -164,7 +163,7 @@ export default function LandlordDashboard() {
               {tab === 'overview' && (
                 <div>
                   <div className="page-header">
-                    <div><h1 className="page-title">Welcome, {user.name.split(' ')[0]} 🏠</h1><p className="page-subtitle">Manage your properties and tenants</p></div>
+                    <div><h1 className="page-title">Welcome, {user?.name?.split(' ')?.[0] || 'there'} 🏠</h1><p className="page-subtitle">Manage your properties and tenants</p></div>
                     <button className="btn btn-primary" onClick={openNewProp}>+ Add Property</button>
                   </div>
                   <div className="stats-grid">
@@ -483,7 +482,7 @@ function ProfileTab({ user }) {
       <div className="card">
         <form onSubmit={save} style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
           <div className="form-group"><label className="form-label">Full Name</label><input className="form-input" value={form.name} onChange={e => setForm(p => ({ ...p, name: e.target.value }))} /></div>
-          <div className="form-group"><label className="form-label">Email (read-only)</label><input className="form-input" value={user.email} disabled style={{ opacity: .6 }} /></div>
+          <div className="form-group"><label className="form-label">Email (read-only)</label><input className="form-input" value={user?.email || ''} disabled style={{ opacity: .6 }} /></div>
           <div className="form-group"><label className="form-label">Phone</label><input className="form-input" value={form.phone} onChange={e => setForm(p => ({ ...p, phone: e.target.value }))} /></div>
           <div className="form-group"><label className="form-label">Bank Details (optional)</label><textarea className="form-textarea" value={form.bank_details} onChange={e => setForm(p => ({ ...p, bank_details: e.target.value }))} placeholder="Bank name, account number…" rows={3} /></div>
           <button type="submit" className="btn btn-primary">Save Changes</button>

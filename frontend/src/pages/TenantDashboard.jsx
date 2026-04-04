@@ -55,19 +55,18 @@ export default function TenantDashboard() {
 
   async function loadAll() {
     setLoading(true);
-    try {
-      const [ten, pay, req, maint] = await Promise.all([
-        api.get('/payments/tenancy').catch(() => ({ data: null })),
-        api.get('/payments/history'),
-        api.get('/rentals/tenant'),
-        api.get('/maintenance/tenant'),
-      ]);
-      setTenancy(ten.data || null);
-      setPayments(Array.isArray(pay.data) ? pay.data : []);
-      setRequests(Array.isArray(req.data) ? req.data : []);
-      setMaintenance(Array.isArray(maint.data) ? maint.data : []);
-      if (ten.data) setPayForm(p => ({ ...p, amount: ten.data.monthly_rent }));
-    } catch (err) { console.error(err); }
+    const safe = async (fn, fallback) => { try { const r = await fn(); return r?.data ?? fallback; } catch(e) { console.warn('API err:', e?.message); return fallback; } };
+    const [ten, pay, req, maint] = await Promise.all([
+      safe(() => api.get('/payments/tenancy'), null),
+      safe(() => api.get('/payments/history'), []),
+      safe(() => api.get('/rentals/tenant'), []),
+      safe(() => api.get('/maintenance/tenant'), []),
+    ]);
+    setTenancy(ten || null);
+    setPayments(Array.isArray(pay) ? pay : []);
+    setRequests(Array.isArray(req) ? req : []);
+    setMaintenance(Array.isArray(maint) ? maint : []);
+    if (ten?.monthly_rent) setPayForm(p => ({ ...p, amount: ten.monthly_rent }));
     setLoading(false);
   }
 
@@ -122,7 +121,7 @@ export default function TenantDashboard() {
                 <div>
                   <div className="page-header">
                     <div>
-                      <h1 className="page-title">Welcome, {user.name.split(' ')[0]} 👋</h1>
+                      <h1 className="page-title">Welcome, {user?.name?.split(' ')?.[0] || 'there'} 👋</h1>
                       <p className="page-subtitle">Manage your tenancy and payments</p>
                     </div>
                   </div>
@@ -444,7 +443,7 @@ function ProfileTab({ user }) {
         <h3 style={{ fontFamily: 'var(--font-display)', fontWeight: 700, marginBottom: 20 }}>Personal Information</h3>
         <form onSubmit={saveProfile} style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
           <div className="form-group"><label className="form-label">Full Name</label><input className="form-input" value={form.name} onChange={e => setForm(p => ({ ...p, name: e.target.value }))} /></div>
-          <div className="form-group"><label className="form-label">Email</label><input className="form-input" value={user.email} disabled style={{ opacity: .6 }} /></div>
+          <div className="form-group"><label className="form-label">Email</label><input className="form-input" value={user?.email || ''} disabled style={{ opacity: .6 }} /></div>
           <div className="form-group"><label className="form-label">Phone</label><input className="form-input" value={form.phone} onChange={e => setForm(p => ({ ...p, phone: e.target.value }))} /></div>
           <button type="submit" className="btn btn-primary">Save Changes</button>
         </form>
