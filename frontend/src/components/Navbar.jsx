@@ -32,8 +32,18 @@ export default function Navbar() {
   async function fetchNotifications() {
     try {
       const res = await api.get('/notifications');
-      setNotifs(res.data.notifications || []);
-      setUnread(res.data.unread_count || 0);
+      const data = res?.data;
+      // Reject Railway/Vercel error objects {code, message}
+      if (!data || typeof data !== 'object' || data.code || !('notifications' in data)) return;
+      const notifList = Array.isArray(data.notifications) ? data.notifications : [];
+      // Ensure every notification has string title/message (not objects)
+      const safeNotifs = notifList.map(n => ({
+        ...n,
+        title: typeof n.title === 'string' ? n.title : 'Notification',
+        message: typeof n.message === 'string' ? n.message : '',
+      }));
+      setNotifs(safeNotifs);
+      setUnread(typeof data.unread_count === 'number' ? data.unread_count : 0);
     } catch {}
   }
 

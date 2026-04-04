@@ -19,7 +19,8 @@ export default function Login() {
       const role = res.user.role;
       navigate(role === 'landlord' ? '/dashboard/landlord' : role === 'admin' ? '/dashboard/admin' : '/dashboard/tenant');
     } catch (err) {
-      setError(err.response?.data?.error || 'Login failed. Please try again.');
+      const errVal = err.response?.data?.error || err.response?.data?.message || err.message || 'Login failed. Please try again.';
+      setError(typeof errVal === 'string' ? errVal : 'Login failed. Please check your credentials.');
     } finally { setLoading(false); }
   }
 

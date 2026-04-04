@@ -25,7 +25,8 @@ export default function Register() {
       const res = await register({ name: form.name, email: form.email, phone: form.phone, password: form.password, role: form.role });
       navigate(res.user.role === 'landlord' ? '/dashboard/landlord' : '/dashboard/tenant');
     } catch (err) {
-      setError(err.response?.data?.error || 'Registration failed. Please try again.');
+      const errVal = err.response?.data?.error || err.response?.data?.message || err.message || 'Registration failed. Please try again.';
+      setError(typeof errVal === 'string' ? errVal : 'Registration failed. Please try again.');
     } finally { setLoading(false); }
   }
 

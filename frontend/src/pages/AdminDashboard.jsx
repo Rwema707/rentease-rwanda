@@ -16,16 +16,16 @@ export default function AdminDashboard() {
 
   async function loadAll() {
     setLoading(true);
-    try {
-      const [s, u, p] = await Promise.all([
-        api.get('/admin/stats'),
-        api.get('/admin/users'),
-        api.get('/admin/payments'),
-      ]);
-      setStats(s.data || null);
-      setUsers(Array.isArray(u.data) ? u.data : []);
-      setPayments(Array.isArray(p.data) ? p.data : []);
-    } catch (err) { console.error(err); }
+    const isErrObj = (v) => v && typeof v === 'object' && !Array.isArray(v) && ('code' in v || 'error' in v) && !v.id && !v.property_id && !v.tenancy_id && !v.amount;
+    const safe = async (fn, fallback) => { try { const r = await fn(); const d = r?.data; if (d === undefined || d === null) return fallback; if (isErrObj(d)) { console.warn('API returned error object:', d); return fallback; } return d; } catch(e) { console.warn('API err:', e?.message); return fallback; } };
+    const [s, u, p] = await Promise.all([
+      safe(() => api.get('/admin/stats'), null),
+      safe(() => api.get('/admin/users'), []),
+      safe(() => api.get('/admin/payments'), []),
+    ]);
+    setStats(s || null);
+    setUsers(Array.isArray(u) ? u : []);
+    setPayments(Array.isArray(p) ? p : []);
     setLoading(false);
   }
 

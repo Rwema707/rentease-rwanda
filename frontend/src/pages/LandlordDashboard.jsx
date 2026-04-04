@@ -63,7 +63,8 @@ export default function LandlordDashboard() {
 
   async function loadAll() {
     setLoading(true);
-    const safe = async (fn, fallback) => { try { const r = await fn(); return r?.data ?? fallback; } catch(e) { console.warn('API err:', e?.message); return fallback; } };
+    const isErrObj = (v) => v && typeof v === 'object' && !Array.isArray(v) && ('code' in v || 'error' in v) && !v.id && !v.property_id && !v.tenancy_id && !v.amount;
+    const safe = async (fn, fallback) => { try { const r = await fn(); const d = r?.data; if (d === undefined || d === null) return fallback; if (isErrObj(d)) { console.warn('API returned error object:', d); return fallback; } return d; } catch(e) { console.warn('API err:', e?.message); return fallback; } };
     const [props, reqs, pays, maint] = await Promise.all([
       safe(() => api.get('/properties/landlord/mine'), []),
       safe(() => api.get('/rentals/landlord'), []),
@@ -107,7 +108,7 @@ export default function LandlordDashboard() {
       loadAll();
       setTimeout(() => setShowPropModal(false), 1500);
     } catch (err) {
-      setActionStatus({ loading: false, success: '', error: err.response?.data?.error || 'Failed to save property' });
+      setActionStatus({ loading: false, success: '', error: (typeof (err.response?.data?.error) === 'string' ? err.response?.data?.error : err.response?.data?.message || err.message || 'Failed to save property') });
     }
   }
 
@@ -121,7 +122,7 @@ export default function LandlordDashboard() {
     try {
       await api.put(`/rentals/${id}`, { status });
       loadAll();
-    } catch (err) { alert(err.response?.data?.error || 'Failed'); }
+    } catch (err) { alert((typeof (err.response?.data?.error) === 'string' ? err.response?.data?.error : err.response?.data?.message || err.message || 'Failed')); }
   }
 
   async function updateMaintenance(e) {

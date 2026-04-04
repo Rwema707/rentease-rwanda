@@ -55,7 +55,8 @@ export default function TenantDashboard() {
 
   async function loadAll() {
     setLoading(true);
-    const safe = async (fn, fallback) => { try { const r = await fn(); return r?.data ?? fallback; } catch(e) { console.warn('API err:', e?.message); return fallback; } };
+    const isErrObj = (v) => v && typeof v === 'object' && !Array.isArray(v) && ('code' in v || 'error' in v) && !v.id && !v.property_id && !v.tenancy_id && !v.amount;
+    const safe = async (fn, fallback) => { try { const r = await fn(); const d = r?.data; if (d === undefined || d === null) return fallback; if (isErrObj(d)) { console.warn('API returned error object:', d); return fallback; } return d; } catch(e) { console.warn('API err:', e?.message); return fallback; } };
     const [ten, pay, req, maint] = await Promise.all([
       safe(() => api.get('/payments/tenancy'), null),
       safe(() => api.get('/payments/history'), []),
@@ -83,7 +84,7 @@ export default function TenantDashboard() {
         setActionStatus({ loading: false, success: '', error: '❌ Payment failed. Please try again.' });
       }
     } catch (err) {
-      setActionStatus({ loading: false, success: '', error: err.response?.data?.error || 'Payment failed' });
+      setActionStatus({ loading: false, success: '', error: (typeof (err.response?.data?.error) === 'string' ? err.response?.data?.error : err.response?.data?.message || err.message || 'Payment failed') });
     }
   }
 
@@ -97,7 +98,7 @@ export default function TenantDashboard() {
       loadAll();
       setTimeout(() => setMaintModal(false), 2000);
     } catch (err) {
-      setActionStatus({ loading: false, success: '', error: err.response?.data?.error || 'Submission failed' });
+      setActionStatus({ loading: false, success: '', error: (typeof (err.response?.data?.error) === 'string' ? err.response?.data?.error : err.response?.data?.message || err.message || 'Submission failed') });
     }
   }
 
@@ -422,7 +423,7 @@ function ProfileTab({ user }) {
       const res = await api.put('/auth/profile', form);
       updateUser(res.data.user);
       setStatus({ success: 'Profile updated!', error: '' });
-    } catch (err) { setStatus({ success: '', error: err.response?.data?.error || 'Update failed' }); }
+    } catch (err) { setStatus({ success: '', error: (typeof (err.response?.data?.error) === 'string' ? err.response?.data?.error : err.response?.data?.message || err.message || 'Update failed') }); }
   }
   async function changePassword(e) {
     e.preventDefault(); setStatus({ success: '', error: '' });
@@ -431,7 +432,7 @@ function ProfileTab({ user }) {
       await api.put('/auth/change-password', { currentPassword: pwForm.currentPassword, newPassword: pwForm.newPassword });
       setStatus({ success: 'Password updated!', error: '' });
       setPwForm({ currentPassword: '', newPassword: '', confirm: '' });
-    } catch (err) { setStatus({ success: '', error: err.response?.data?.error || 'Change failed' }); }
+    } catch (err) { setStatus({ success: '', error: (typeof (err.response?.data?.error) === 'string' ? err.response?.data?.error : err.response?.data?.message || err.message || 'Change failed') }); }
   }
 
   return (
