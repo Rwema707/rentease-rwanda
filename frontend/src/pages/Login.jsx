@@ -19,8 +19,13 @@ export default function Login() {
       const role = res.user.role;
       navigate(role === 'landlord' ? '/dashboard/landlord' : role === 'admin' ? '/dashboard/admin' : '/dashboard/tenant');
     } catch (err) {
-      const errVal = err.response?.data?.error || err.response?.data?.message || err.message || 'Login failed. Please try again.';
-      setError(typeof errVal === 'string' ? errVal : 'Login failed. Please check your credentials.');
+      // Safely extract string from any error shape (handles nested {code,message} objects)
+      const toStr = (v) => !v ? null : typeof v === 'string' ? v : typeof v === 'object' ? (v.message || v.code || null) : String(v);
+      const errStr = toStr(err.response?.data?.error)
+                  || toStr(err.response?.data?.message)
+                  || toStr(err.message)
+                  || 'Could not connect to server. Check that the backend is running.';
+      setError(errStr);
     } finally { setLoading(false); }
   }
 
