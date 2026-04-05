@@ -43,6 +43,8 @@ dbReady.then(() => {
   const { router: notifRouter, scheduleRentReminders } = require('./routes/notifications');
   app.use('/api/notifications', notifRouter);
 
+  // Root route — confirms server is alive
+  app.get('/', (req, res) => res.json({ service: 'RentEase Rwanda API', status: 'running', docs: '/api/health' }));
   app.get('/api/health', (req, res) => res.json({ status: 'ok', service: 'RentEase Rwanda API', time: new Date().toISOString() }));
 
   // Public status endpoint — shows DB health without auth
