@@ -10,7 +10,7 @@ function isValidUser(data) {
 
 function safeGetUser() {
   try {
-    const parsed = JSON.parse(localStorage.getItem('rentease_user'));
+    const parsed = JSON.parse(sessionStorage.getItem('rentease_user'));
     return isValidUser(parsed) ? parsed : null;
   } catch { return null; }
 }
@@ -20,7 +20,7 @@ export function AuthProvider({ children }) {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    const token = localStorage.getItem('rentease_token');
+    const token = sessionStorage.getItem('rentease_token');
     if (!token) { setLoading(false); return; }
 
     api.get('/auth/me')
@@ -28,15 +28,15 @@ export function AuthProvider({ children }) {
         const data = res?.data;
         if (isValidUser(data)) {
           setUser(data);
-          localStorage.setItem('rentease_user', JSON.stringify(data));
+          sessionStorage.setItem('rentease_user', JSON.stringify(data));
         } else {
           console.warn('Invalid /auth/me response, keeping cached user:', data);
           const cached = safeGetUser();
           if (cached) {
             setUser(cached);
           } else {
-            localStorage.removeItem('rentease_token');
-            localStorage.removeItem('rentease_user');
+            sessionStorage.removeItem('rentease_token');
+            sessionStorage.removeItem('rentease_user');
             setUser(null);
           }
         }
@@ -44,8 +44,8 @@ export function AuthProvider({ children }) {
       .catch(err => {
         console.warn('/auth/me failed:', err?.message);
         if (err?.response?.status === 401) {
-          localStorage.removeItem('rentease_token');
-          localStorage.removeItem('rentease_user');
+          sessionStorage.removeItem('rentease_token');
+          sessionStorage.removeItem('rentease_user');
           setUser(null);
         }
         // Otherwise keep cached user (transient network error)
@@ -57,8 +57,8 @@ export function AuthProvider({ children }) {
     const res = await api.post('/auth/login', { email, password });
     const { token, user: userData } = res.data;
     if (!isValidUser(userData)) throw new Error('Invalid server response');
-    localStorage.setItem('rentease_token', token);
-    localStorage.setItem('rentease_user', JSON.stringify(userData));
+    sessionStorage.setItem('rentease_token', token);
+    sessionStorage.setItem('rentease_user', JSON.stringify(userData));
     setUser(userData);
     return res.data;
   };
@@ -67,22 +67,22 @@ export function AuthProvider({ children }) {
     const res = await api.post('/auth/register', data);
     const { token, user: userData } = res.data;
     if (!isValidUser(userData)) throw new Error('Invalid server response');
-    localStorage.setItem('rentease_token', token);
-    localStorage.setItem('rentease_user', JSON.stringify(userData));
+    sessionStorage.setItem('rentease_token', token);
+    sessionStorage.setItem('rentease_user', JSON.stringify(userData));
     setUser(userData);
     return res.data;
   };
 
   const logout = () => {
-    localStorage.removeItem('rentease_token');
-    localStorage.removeItem('rentease_user');
+    sessionStorage.removeItem('rentease_token');
+    sessionStorage.removeItem('rentease_user');
     setUser(null);
   };
 
   const updateUser = (updated) => {
     if (!isValidUser(updated)) return;
     setUser(updated);
-    localStorage.setItem('rentease_user', JSON.stringify(updated));
+    sessionStorage.setItem('rentease_user', JSON.stringify(updated));
   };
 
   return (

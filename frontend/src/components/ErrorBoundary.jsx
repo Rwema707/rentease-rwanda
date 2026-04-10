@@ -58,7 +58,7 @@ export default class ErrorBoundary extends Component {
                 Try Again
               </button>
               <button
-                onClick={() => { localStorage.clear(); window.location.href = '/login'; }}
+                onClick={() => { sessionStorage.clear(); window.location.href = '/login'; }}
                 style={{
                   padding: '10px 20px', background: '#f3f4f6', color: '#1a1a18',
                   border: '1px solid #c5c5c0', borderRadius: 8, cursor: 'pointer',
